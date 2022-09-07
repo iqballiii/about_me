@@ -10,6 +10,13 @@ Future<Uint8List> makePdf() async {
   ))
       .buffer
       .asUint8List());
+
+  final imageWatermark = pw.MemoryImage((await rootBundle.load(
+    'assets/medicard_watermark.png',
+  ))
+      .buffer
+      .asUint8List());
+
   pdf.addPage(pw.Page(build: (context) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),

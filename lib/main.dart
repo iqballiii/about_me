@@ -18,13 +18,25 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   Future<void> securePdf() async {
+    PdfImage imageWatermark = PdfBitmap((await rootBundle.load(
+      'assets/medicard_watermark.png',
+    ))
+        .buffer
+        .asUint8List());
     PdfDocument document = PdfDocument(inputBytes: await makePdf());
-    document.security.userPassword = '123456789';
+    PdfPage page = document.pages[0];
+    PdfGraphics graphics = page.graphics;
+    graphics.setTransparency(0.3);
+    graphics.drawImage(
+        imageWatermark,
+        Rect.fromLTWH(
+            0.0, page.size.height * 0.2, page.size.width, page.size.height));
+    graphics.restore();
+    document.security.userPassword = '1';
     document.security.ownerPassword = 'owner@123';
     List<int> bytes = await document.save();
     document.dispose();
     print('The save file function is called');
-
     _launchPdf(bytes, 'secured.pdf');
   }
 
@@ -85,6 +97,41 @@ class MyApp extends StatelessWidget {
     //Open the PDF file.
     _launchPdf(bytes, 'unsecured.pdf');
   }
+
+  // void addWatermark() async {
+  //   PdfDocument documents =
+  //       PdfDocument(inputBytes: await _readDocumentData('test_data.pdf'));
+  //   PdfPage page = documents.pages[0];
+  //   //Get page size
+  //   Size pageSize = page.getClientSize();
+  //   //Set a standard font
+  //   PdfFont font = PdfStandardFont(PdfFontFamily.helvetica, 40);
+  //   //Measure the text
+  //   Size size = font.measureString('Confidential');
+  //   //Create PDF graphics for the page
+  //   PdfGraphics graphics = page.graphics;
+  //   //Calculate the center point.
+  //   double x = pageSize.width / 2;
+  //   double y = pageSize.height / 2;
+  //   //Save the graphics state for the watermark text
+  //   graphics.save();
+  //   //Tranlate the transform with the center point.
+  //   graphics.translateTransform(x, y);
+  //   //Set transparency level for the text
+  //   graphics.setTransparency(0.25);
+  //   //Rotate the text to -40 Degree
+  //   graphics.rotateTransform(-40);
+  //   //Draw the watermark text to the desired position over the PDF page with red color
+  //   graphics.drawString('Confidential', font,
+  //       pen: PdfPen(PdfColor(255, 0, 0)),
+  //       brush: PdfBrushes.red,
+  //       bounds: Rect.fromLTWH(
+  //           -size.width / 2, -size.height / 2, size.width, size.height));
+  //   //Restore the graphics
+  //   graphics.restore();
+  //   //Save the document
+  //   List<int> bytes = documents.save();
+  // }
 
   void _savePDF(String fileName, List<int> bytes) async {
     final pdf = PdfDocument.fromBase64String(Base64Encoder().convert(bytes));
